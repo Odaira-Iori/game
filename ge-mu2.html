@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="img/favicon.ico">
+  <title>にゃんきゃっと | 究極の暇つぶし</title>
+
+  <!-- CSS部分 -->
+<style>
+  *{
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: #27428c;
+  }
+  canvas {
+    margin-left: 10%;
+    background-color: #2d4da5; 
+    width: 480px;
+    height: 690px;
+    z-index: 20;
+    border: 1px solid #223876;
+    z-index: 0;
+  }
+  .display,.score{
+    color: #ffffff;
+    font-size: 2rem;
+  }
+  .baku{
+    text-shadow: 2px 3px 3px #eee;
+    background-color: #223876;
+    padding: 1%;
+    height: 20%;
+  }
+  button{
+    background-color: #969dff;
+    border-radius: 5em;
+    padding: 1% 3%;
+    margin:  3%;
+    font-size: 2rem;
+    color: #fff;
+    border: none;
+  }
+  .game{
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 20px;
+    background-image:url(img/hanabi\(\).gif);
+    margin-bottom: 2%;
+  }
+
+  /*------メニュー------*/
+  img{
+    margin: 5% 0 0 5%;
+    z-index: 4;
+  }
+  .actions{
+    text-align: center;
+    margin-right: 3%;
+  }
+
+  .nav-wrapper {
+    position: fixed;
+    top: 0;
+    left: -350px; /* 初期状態で左に隠す */
+    width: 250px;
+    height: 100%;
+    background-color: #888fea;
+    transition: left 0.3s ease;
+    padding: 12% 0 0 5%;
+    z-index: 2;
+}
+.nav-wrapper.open {
+    left: 0;
+}
+.nav-wrapper a {
+    display: block;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+}
+.nav-wrapper a:hover {
+    background-color: #2d4da5;
+}
+.hamburger {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+.black-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(145, 145, 145, 0.5);
+    display: none;
+}
+.black-bg.active {
+    display: block;
+    z-index: 1;
+}
+/*------メニュー------*/
+</style>
+
+
+</head>
+<body>
+    <div id = "stopWatchPanel">
+      <div id="nav-wrapper" class="nav-wrapper">
+        <a href="index.html">ホーム</a>
+        <a href="setumei.html">操作説明</a>
+        <a href="#">究極の暇つぶしに進む</a>
+    </div>
+    <img id="js-hamburger" class="hamburger" src="img/aikon.svg" alt="メニュー" width="100" height="100">
+    <div id="js-black-bg" class="black-bg"></div>
+      <div class = "actions">
+          <button class = "startButton">スタート</button>
+          <!--<button class = "stopButton">ストップ</button>-->
+      </div>
+    </div>
+
+    <div class="game">
+      <div class="baku">
+        <div class = "display">0</div>
+        <div class="score">
+          スコア: <span id="scoreDisplay">0</span>
+        </div>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+    
+    </div>
+<script src="js/tesuto.js"></script>
+
+
+<!-- JavaScript部分 -->
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  // CSSのサイズとJSのサイズを一致させる
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+
+  // 自機の初期設定（サイズとか初期位置とか）
+  const shipWidth = 50, shipHeight = 140;
+  let shipX = canvas.width / 2 - shipWidth / 2;
+  let shipY = canvas.height - shipHeight - 10;
+
+  let ship = { x: shipX, y: shipY, width: shipWidth, height: shipHeight, dx: 0, dy: 0 };
+  let bullets = [], enemies = [], score = 0, gameRunning = false;
+
+  // 自機の当たり判定
+function checkCollision(x, y, width, height) {
+    // ここでは単純な矩形当たり判定を使います
+    return (
+        x +30 < shipX + shipWidth &&
+        x + width +30 > shipX &&
+        y < shipY + shipHeight &&
+        y + height > shipY
+    );
+}
+  
+  // キー入力のイベントリスナー
+  document.addEventListener("keydown", keyDownHandler);
+  document.addEventListener("keyup", keyUpHandler);
+  document.addEventListener("keypress", keyPressHandler);
+
+  // キー押下時の処理
+  function keyDownHandler(e) {
+    if (e.key === "d" || e.key === "ArrowRight") ship.dx = 3; // 右移動
+    else if (e.key === "a" || e.key === "ArrowLeft") ship.dx = -3; // 左移動
+    else if (e.key === "w" || e.key === "ArrowUp") ship.dy = -3;  // 上移動
+    else if (e.key === "s" || e.key === "ArrowDown") ship.dy = 3;  // 下移動
+  }
+
+  // キーを離したときの処理
+  function keyUpHandler(e) {
+    if (["d", "ArrowRight", "a", "ArrowLeft"].includes(e.key)) ship.dx = 0;
+    if (["w", "ArrowUp"].includes(e.key)) ship.dy = 0;  // 上方向停止
+    if (["s", "ArrowDown"].includes(e.key)) ship.dy = 0;  // 下方向停止
+  }
+
+  // スペースキーで弾を発射
+  function keyPressHandler(e) {
+    if (e.key === " " || e.key === "Spacebar") bullets.push({ x: ship.x + ship.width / 2 - 2.5, y: ship.y, width: 5, height: 10, dy: -5 });
+  }
+  let fireInterval = null; // 連射用タイマー
+
+document.addEventListener("keydown", keyDownHandler);
+document.addEventListener("keyup", keyUpHandler);
+document.addEventListener("mousedown", mouseDownHandler);
+document.addEventListener("mouseup", mouseUpHandler);
+document.addEventListener("click", fireBullet); // ← クリック単発でも撃つ
+
+function keyDownHandler(e) {
+    if (e.key === "d" || e.key === "ArrowRight") ship.dx = 3;
+    else if (e.key === "a" || e.key === "ArrowLeft") ship.dx = -3;
+    else if (e.key === "w" || e.key === "ArrowUp") ship.dy = -3;
+    else if (e.key === "s" || e.key === "ArrowDown") ship.dy = 3;
+    else if (e.key === " " || e.key === "Spacebar") startFiring();
+}
+
+function keyUpHandler(e) {
+    if (["d", "ArrowRight", "a", "ArrowLeft"].includes(e.key)) ship.dx = 0;
+    if (["w", "ArrowUp", "s", "ArrowDown"].includes(e.key)) ship.dy = 0;
+    if (e.key === " " || e.key === "Spacebar") stopFiring();
+}
+
+function mouseDownHandler() { startFiring(); }
+function mouseUpHandler() { stopFiring(); }
+
+function startFiring() {
+    if (!fireInterval) {  
+        fireBullet(); 
+        fireInterval = setInterval(fireBullet, 200); 
+    }
+}
+
+function stopFiring() {
+    clearInterval(fireInterval);
+    fireInterval = null;
+}
+/*
+// 弾の発射処理
+function fireBullet() {
+    bullets.push({
+        x: ship.x + ship.width / 2 - 2.5,
+        y: ship.y,
+        width: 5,
+        height: 5,
+        dy: -5
+    });
+}
+  // 自機の描画
+  function drawShip() { ctx.fillStyle = "#faa456"; ctx.fillRect(ship.x, ship.y, ship.width, ship.height); }
+
+  // 弾の描画
+  function drawBullets() {
+    ctx.fillStyle = "#ff6611";
+    bullets.forEach((b, i) => { ctx.fillRect(b.x, b.y, b.width, b.height); b.y += b.dy; if (b.y < 0) bullets.splice(i, 1); });
+  }
+*/
+
+// 色の配列
+const colors = ["#D8212F", "#D86525", "#EFEB56", "#85C45C", "#1DB7B7", "#789FFF"]; // 赤、オレンジ、黄色、緑、青、紫
+
+// 色のインデックス
+let colorIndex = 0;
+
+// 一定時間ごとに色を変更（色は発射前に裏で変わっている）
+setInterval(() => {
+    colorIndex = (colorIndex + 1) % colors.length;  // インデックスを循環させる
+}, 1000);  // 1000ミリ秒（1秒）ごとに色を変える
+
+// 弾の発射処理
+function fireBullet() {
+    // 発射時に色を取得
+    const bulletColor = colors[colorIndex];
+
+    // 弾のオブジェクトを作成
+    const bullet = {
+        x: ship.x + ship.width / 2 - 2.5, // 自機の中央から発射
+        y: ship.y,                        // 自機の位置
+        width: 5,                          // 弾の幅
+        height: 15,                         // 弾の高さ
+        dy: -5,                            // 上方向に移動
+        color: bulletColor                 // 発射時の色
+    };
+
+    // 弾を配列に追加
+    bullets.push(bullet);
+}
+
+
+
+// 自機の画像を読み込み（アニメーション用に複数枚）
+const shipImages = ["img/gif/k1.png", "img/gif/k2.png", "img/gif/k3.png","img/gif/k4.png"]; // アニメーション用の画像配列
+let shipImgIndex = 0; // 現在のフレームの画像インデックス
+let shipImg = new Image(); // 画像オブジェクト
+shipImg.src = shipImages[shipImgIndex]; // 初期画像を設定
+
+// 画像の切り替えアニメーション
+setInterval(() => {
+    shipImgIndex = (shipImgIndex + 1) % shipImages.length; // 次の画像に切り替え
+    shipImg.src = shipImages[shipImgIndex]; // 画像を更新
+}, 500); // 500ミリ 0.5秒ごとに画像を変更
+
+// 自機の描画（画像を使用）
+function drawShip() { 
+    ctx.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height ); // 画像で描画s
+}
+
+// 弾の描画
+function drawBullets() {
+    bullets.forEach((b, i) => {
+        ctx.fillStyle = b.color; // 各弾の色を設定
+        ctx.fillRect(b.x, b.y, b.width, b.height);
+        b.y += b.dy; // 弾の移動
+
+        // 画面外に出た弾を削除
+        if (b.y < 0) bullets.splice(i, 1);
+    });
+}
+
+let blinkStartTime = null;  // 点滅開始時間
+let isBlinking = false;     // 点滅中かどうかのフラグ
+let blinkDuration = 1;      // 点滅の持続時間（秒）
+let blinkInterval = 111;    // 点滅間隔（ミリ秒）
+
+// 敵の描画関数と衝突判定で点滅処理
+// 画像のパスリストを事前に読み込む
+const enemyImagePaths = ["img/b1.gif", "img/r1.gif"]; // 敵の画像パスを配列で定義
+const enemyImages = enemyImagePaths.map(src => {
+    let img = new Image(); // 画像オブジェクトを作成
+    img.src = src; // 画像のソースを設定
+    return img; // 画像オブジェクトを返す
+});
+
+// 敵の生成
+function createEnemies() {
+    if (Math.random() < 0.02) { // 2% の確率で敵を生成
+        let randomIndex = Math.floor(Math.random() * enemyImages.length); // ランダムに画像を選択
+        enemies.push({
+            x: Math.random() * (canvas.width - 30), // ランダムなX座標
+            y: 0, // 初期Y座標
+            width: 30, // 敵の幅
+            height: 30, // 敵の高さ
+            dy: 2, // 敵の移動速度
+            img: enemyImages[randomIndex] // 事前ロード済みの画像を適用
+        });
+    }
+}
+
+// 敵の描画
+function drawEnemies() {
+    enemies.forEach((e, i) => {
+        ctx.drawImage(e.img, e.x, e.y, e.width, e.height); // 敵の描画
+        e.y += e.dy; // 敵の移動
+
+        if (e.y > canvas.height) enemies.splice(i, 1); // 画面外に出た敵を削除
+    
+        // 自機との衝突判定
+        if (ship.x < e.x + e.width && ship.x + ship.width > e.x && ship.y < e.y + e.height && ship.y + ship.height > e.y) {
+            // 自機が敵と接触した場合の処理（点滅開始）
+            if (!isBlinking) {
+                isBlinking = true;  // 点滅フラグを立てる
+                blinkStartTime = Date.now();  // 点滅開始時刻を記録
+            }
+
+            // 衝突が発生したことを確認するためにコンソールにログを表示
+            console.log("自機と敵が衝突しました！"); // ここで確認
+        }
+    });
+
+    // 点滅中の処理
+if (isBlinking) {
+    let elapsedTime = (Date.now() - blinkStartTime) / 1000;  // 経過時間（秒）
+
+    // 点滅処理（一定時間ごとに色を変更）
+    if (elapsedTime < blinkDuration) {
+        // 半透明効果と赤色フィルターを使って点滅を表現する
+        if (Math.floor(elapsedTime * (1000 / blinkInterval)) % 2 === 0) {
+            ctx.globalAlpha = 0.5; // 半透明（点滅時）
+            ctx.filter = "brightness(0) saturate(100%) hue-rotate(0deg)"; // 赤色
+        } else {
+            ctx.globalAlpha = 1.0; // 完全不透明（通常時）
+            ctx.filter = "none"; // フィルター解除
+        }
+    } else {
+        ctx.globalAlpha = 1.0;  // 点滅終了後は不透明に戻す
+        ctx.filter = "none"; // フィルター解除
+        isBlinking = false;  // 点滅終了
+    }
+} else {
+    ctx.globalAlpha = 1.0;  // 通常の不透明
+    ctx.filter = "none"; // フィルター解除
+}
+
+// 自機の画像を描画（点滅効果を適用）
+ctx.drawImage(shipImg, ship.x, ship.y, shipWidth, shipHeight);
+
+// 点滅後は描画の透明度とフィルターを元に戻す
+ctx.globalAlpha = 1.0;
+ctx.filter = "none"; // フィルター解除
+}
+
+// 敵の生成（別のバージョン、速度が異なる）
+function createEnemies() {
+    if (Math.random() < 0.02) {
+        let randomIndex = Math.floor(Math.random() * enemyImages.length); // ランダムに画像を選択
+        enemies.push({
+            x: Math.random() * (canvas.width - 30), // ランダムなX座標
+            y: 0, // 初期Y座標
+            width: 30, // 敵の幅
+            height: 30, // 敵の高さ
+            dy: 5, // 敵の移動速度（上の関数とは異なる値）
+            img: enemyImages[randomIndex] // 画像をリストから取得
+        });
+    }
+}
+
+// 衝突判定（弾と敵）
+function detectCollisions() {
+    bullets.forEach((b, bi) => { // すべての弾をループ
+        enemies.forEach((e, ei) => { // すべての敵をループ
+            // 弾と敵が重なった場合の処理
+            if (b.x < e.x + e.width && b.x + b.width > e.x && b.y < e.y + e.height && b.y + b.height > e.y) {
+                bullets.splice(bi, 1); // 弾を削除
+                enemies.splice(ei, 1); // 敵を削除
+                score++; // スコアを加算
+                console.log(score); // コンソールにスコアを表示
+            }
+        });
+    });
+}
+
+
+  // ゲームの更新処理
+  function update() {
+    if (!gameRunning) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 横移動（dx）
+    ship.x += ship.dx;
+    // 縦移動（dy）
+    ship.y += ship.dy;
+
+    // 壁にぶつからないように制御
+    if (ship.x < 0) ship.x = 0;
+    if (ship.x + ship.width > canvas.width) ship.x = canvas.width - ship.width;
+    if (ship.y < 0) ship.y = 0;  // 上方向制限
+    if (ship.y + ship.height > canvas.height) ship.y = canvas.height - ship.height;  // 下方向制限
+
+    drawShip();
+    drawBullets();
+    drawEnemies();
+    createEnemies();
+    detectCollisions();
+
+     // スコアを表示に反映
+     document.getElementById("scoreDisplay").textContent = score;  // scoreをHTMLに表示
+
+
+    requestAnimationFrame(update);
+    
+  }
+
+// ゲーム開始・停止ボタン
+let displayElm = document.querySelector(".display");
+  let timer = null;
+  let startButton = document.querySelector(".startButton");
+  let stopButton = document.querySelector(".stopButton");
+
+  startButton.addEventListener("click", function() {
+    if (!gameRunning) {
+        gameRunning = true;
+
+        // ページの一番下にスクロール
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+
+        let seconds = 0;
+        timer = setInterval(() => { 
+            seconds++; 
+            displayElm.innerText = seconds;
+
+            // カウントが0になったら停止
+            if (seconds >= 100000000) {
+                stopGame();
+                // ゲーム終了時にページの一番上へスクロール
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        }, 1000);
+
+        update();
+    }
+  });
+
+
+  
+  // ゲーム停止処理
+function stopGame() {
+    clearInterval(timer);
+    gameRunning = false;
+    console.log("ゲーム停止");
+}
+
+// SVG画像クリックでゲーム停止
+document.querySelector(".hamburger").addEventListener("click", stopGame);
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+html{
+    overflow: auto;
+}
+body{
+    background-image: url(../img/hanabi\(\).gif);
+    overflow: hidden;
+    background-color: #2d4da5;
+    width: 100vw;
+    height: 100vh;
+}
+.st a{
+    width: 12vw;
+    background-color: #969dff;
+    border: none;
+    border-radius: 5em;
+    font-size: 2rem;
+    color: #fff;
+    display: block;
+    margin: 3% auto;
+    text-decoration: none;
+}
+
+.st a :hover{
+    background-color: #888fea;
+}
+.st{
+    width: 90%;
+    height: 100%;
+    margin: 5% auto;
+    text-align: center;
+}
+
+.hamburger{
+    margin: 5% 0 0 5%;
+    z-index: 3;
+}
+.nav-wrapper {
+    position: fixed;
+    top: 0;
+    left: -250px; /* 初期状態で左に隠す */
+    width: 250px;
+    height: 100%;
+    background-color: #888fea;
+    transition: left 0.3s ease;
+    padding: 12% 0 0 5%;
+    z-index: 2;
+}
+.nav-wrapper.open {
+    left: 0;
+}
+.nav-wrapper a {
+    display: block;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+}
+.nav-wrapper a:hover {
+    background-color: #2d4da5;
+}
+.hamburger {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+.black-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(145, 145, 145, 0.5);
+    display: none;
+}
+.black-bg.active {
+    display: block;
+    z-index: 1;
+}
+.rogo{
+    width: 40vw;
+    height: 50vh;
+    margin: 0 auto;
+}
+.baku{
+    margin: 15% auto 0 auto;
+    color: #eee;
+    background-color: #223876;
+    padding: 1%;
+    width: 30%;
+}
+.baku ul{
+    list-style-type: none;
+}
