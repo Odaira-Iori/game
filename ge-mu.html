@@ -34,19 +34,15 @@
       border: 1px solid #223876;
       z-index: 0;
     }
-    .c1{
-      width: 99vw;
-      height: 99vh;
-      margin: 0 auto;
-      background-color: transparent
-    }
-    .display,.score {
+    .display, .score {
       color: #fff;
       font-size: 2rem;
-      padding-right: 10%;
-
     }
-
+    .baku {
+      text-shadow: 2px 3px 3px #eee;
+      background-color: #223876;
+      padding: 1.5%;
+    }
     .game {
       display: flex;
       flex-direction: row-reverse;
@@ -56,10 +52,8 @@
       margin: 2%;
       position: relative;
     }
-
-    .ga1{
-      display: block;
-      margin: 0;
+    .game div{
+      width: 13vw;
     }
     .score{
       white-space: nowrap;
@@ -206,27 +200,15 @@
       display: block;
       z-index: 2;
     }
-
-    .me1{
-      margin-left: 5%;
-      opacity: 0.8;
-    }
-
     /*------メニュー------*/
     /*------操作------*/
-    .baku {
-      text-shadow: 2px 3px 3px #eee;
-      background-color: #223876;
-      padding: 1.5%;
-      width: 180px;
-    }
     .baku2{
     text-align: center;
     margin: 10% auto 0 auto;
     color: #ccc;
     background-color: #223876;
     padding: 1%;
-    width: 180px;
+    width: 100%;
     font-size: 1.5em;
     }
    .baku2 ul{
@@ -235,25 +217,9 @@
     .baku2 li{
     margin: 2% 3%;
     }
-    .ba1{
-      opacity: 0.8;
-      margin: 1.5% auto 0 auto;
-      position: absolute;
-      right: 20%;
-      width: 180px;
-      padding: 1%;
-    }
-    .ba2{
-      opacity: 0.8;
-      margin: 10% auto 0 auto;
-      position: absolute;
-      right: 20%;
-      width: 180px;
-      padding: 1%;
-    }
     .sousa{
     border-bottom: dashed #ccc 2px;
-    margin: 5% 5%;
+    margin: 0 3%;
     }
     .sousa2{
     font-size: 0.65em;
@@ -271,13 +237,13 @@
     <img id="js-hamburger" class="hamburger" src="img/aikon.svg" alt="メニュー" width="100" height="100">
     <div id="js-black-bg" class="black-bg"></div>
     <div class="actions">
-      <button class=" startButton button1" data-action="restart">スタート</button>
+      <button class="startButton button1">スタート</button>
       <!--<button class="stopButton">ストップ</button>-->
     </div>
     <div class="box1">
       <h2>～一時停止～</h2>
-          <button class="startButton button2" data-action="restart">リスタート</button>
-          <button class="startButton button3" data-action="resume">再開</button>
+          <button class="startButton button2">リスタート</button>
+          <button class="RstartButton button3">再開</button>
     </div>
     <div class="box2">
       <h2>~ゲーム終了~<br>
@@ -285,7 +251,7 @@
           スコア: <span class="scoreDisplay">0</span>
         </div></h2>
       <button class="button4">×</button>
-      <button class="startButton button2" data-action="restart">もう一回</button>
+      <button class="startButton button2">もう一回</button>
     <button class="button3">
       <a href="index.html">
         <p>終わりにする</p>
@@ -358,7 +324,6 @@
     document.addEventListener("mouseup", mouseUpHandler);
     document.addEventListener("click", fireBullet); // クリック単発でも撃つ
 
-    
     // キー押下時の統合処理
     function keyDownHandler(e) {
       if (!gameRunning) return; // ゲームが始まっていない時は処理しない
@@ -601,16 +566,12 @@
     // ゲーム開始・停止ボタン
     let displayElm = document.querySelector(".display");
     let timer = null;
-    //let startButton = document.querySelector(".startButton");
+    let startButton = document.querySelector(".startButton");
+    let RstartButton = document.querySelector(".RstartButton");
     let box1 = document.querySelector(".box1");
     let box2 = document.querySelector(".box2");
-    let button1 = document.querySelector(".button1");
     let button4 = document.querySelector(".button4");
-    let hamburger = document.querySelector(".hamburger");
-    let baku = document.querySelector(".baku");
-    let baku2 = document.querySelector(".baku2");
-    let game = document.querySelector(".game");
-
+    
     button4.addEventListener("click", function() {
       box2.style.opacity = 0;
       box1.style.opacity = 1;
@@ -618,105 +579,80 @@
     });
 
 let canShowRestartMenu = false;  // ゲーム開始後にリスタートメニューを表示するかどうかのフラグ
-
     document.querySelectorAll(".startButton").forEach(button => {
       button.addEventListener("click", function() { // ← `button` を使う！
-      /*
-      document.querySelectorAll("[data-action]").forEach(button => {
-      button.addEventListener("click", function() {
-      */
-      const action = button.getAttribute("data-action");
+        if (!gameRunning) {
+          gameRunning = true;
 
-    if (action === "restart" && !gameRunning) {
-      gameRunning = true;// ゲーム開始後はリスタートメニュー表示可能にする
-      canShowRestartMenu = true;
+          // ゲーム開始時のリセット処理
+          enemySpeed = 5;  // 敵の速度をリセット
+          score = 0;  // スコアをリセット
+          document.querySelectorAll("scoreDisplay").textContent = score; // スコア表示も更新
 
-      // ゲーム開始時のリセット処理
-      enemySpeed = 5;  // 敵の速度をリセット
-      score = 0;  // スコアをリセット
-      document.querySelectorAll(".scoreDisplay").forEach(el => {
-        el.textContent = score; // スコア表示も更新
-      });
+          // ゲーム開始時にボタンを非表示にする
+          startButton.style.opacity = 0;
+          box2.style.opacity = 0;
+          // ページの一番下にスクロール
+          //window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 
-      // 背景色を透明に設定（CSSで指定された背景を上書き）
-      canvas.style.backgroundColor = "#2d4da5";
+          let seconds = 60; // 60から
+          timer = setInterval(() => {
+            seconds--; // ここで引いていく
+            displayElm.innerText = seconds;
 
-
-      hamburger.classList.remove("me1");
-      baku.classList.remove("ba1");
-      baku2.classList.remove("ba2");
-      game.classList.remove("ga1");
-      canvas.classList.remove("c1");
-      
-      // CSSのサイズ（ビジュアルサイズ）を元のままにする場合
-      canvas.style.width = '480px';
-      canvas.style.height = '690px';
-    
-      // ゲーム開始時にボタンを非表示にする
-      button1.style.opacity = 0;
-      box2.style.opacity = 0;
-      box1.style.opacity = 0;
-
-      let seconds = 60; // カウントダウンの秒数
-      timer = setInterval(() => {
-        seconds--;
-        displayElm.innerText = seconds;
-
-        if (seconds <= 0) {
-          stopGame(); // ゲーム停止処理
+            // カウントが0になったら停止
+            if (seconds <= 0) {
+              stopGame(); // ゲーム停止処理
+              // ゲーム終了時にページの一番上へスクロール
+              //window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }, 1000);
+          update(); // ゲーム更新開始
+          canShowRestartMenu = true; // ゲーム開始後はリスタートメニュー表示可能にする
+          box1.style.opacity = 0;
         }
-      }, 1000);
+      });
+    });
 
-      update(); // ゲーム更新開始
+    RstartButton.addEventListener("click", function() {
+  if (!gameRunning) {
+    gameRunning = true;
+
+    // もしタイマーが動いていたら一度停止（重複防止）
+    if (timer) {
+      clearInterval(timer);
     }
-    else if (action === "resume" && !gameRunning) {
-      gameRunning = true;
 
-      // タイマー停止（重複防止）
-      if (timer) {
-        clearInterval(timer);
+    // HTMLから残り時間を取得
+    let seconds = parseInt(document.querySelector(".display").textContent); // divから時間を取得
+
+    // タイマーを開始または再開
+    timer = setInterval(() => {
+      seconds--; // 1秒ごとに減らす
+      document.querySelector(".display").textContent = seconds; // divの中身を更新
+
+      // カウントが0になったら停止
+      if (seconds === 0) {
+        clearInterval(timer);  // タイマーを停止
+        stopGame(); // ゲーム停止処理
       }
 
-      let seconds = parseInt(document.querySelector(".display").textContent); // divから時間を取得
+      // カウントがマイナスになって40秒ごとに敵の速度を上げる
+      if (seconds < 0 && seconds % 40 === 0) {
+        enemySpeed += 1; // 敵の基本速度を +1
+        console.log("敵のスピードアップ!");
+        enemies.forEach(enemy => {
+          enemy.dy = enemySpeed; // 画面上にいる敵の速度も更新
+        });
+      }
+    }, 1000);
 
-      timer = setInterval(() => {
-        seconds--;
-        document.querySelector(".display").textContent = seconds;
-
-        box1.style.opacity = 0;
-        button1.style.opacity = 0;
-
-        if (seconds === 0) {
-          clearInterval(timer);
-          stopGame(); // ゲーム停止処理
-        }
-
-        if (seconds === -1) {
-          // 状態の変更やアニメーション処理を追加
-          hamburger.classList.add("me1");
-          baku.classList.add("ba1");
-          baku2.classList.add("ba2");
-          game.classList.add("ga1");
-
-          canvas.classList.add("c1");
-          // CSSのサイズとJSのサイズを一致させる
-          canvas.width = canvas.clientWidth;
-          canvas.height = canvas.clientHeight;
-        }
-
-        if (seconds < 0 && seconds % 40 === 0) {
-          enemySpeed += 1;
-          console.log("敵のスピードアップ!");
-          enemies.forEach(enemy => {
-            enemy.dy = enemySpeed;
-          });
-        }
-      }, 1000);
-
-      update();  ゲーム更新開始
-    }
-  });
+    update(); // ゲーム更新開始
+    box1.style.opacity = 0; // ゲーム開始時にリスタートメニューを非表示
+    startButton.style.opacity = 0;
+  }
 });
+      
     // ゲーム停止処理
 function stopGame() {
   if (!gameRunning) return; // すでに停止している場合は何もしない
@@ -726,10 +662,15 @@ function stopGame() {
   console.log("ゲーム停止");
 
   if (canShowRestartMenu) {
-    box1.style.opacity = 1;  // box1 を表示する処理
+    box12();  // box1 を表示する処理
     box2.style.opacity = 1;  // box2 も表示
     box2.style.display = "block";  // ← これを追加！box2を復活させる
   }
+}
+
+// ゲーム終了時に box1 を表示
+function box12() {
+  box1.style.opacity = 1;
 }
 
 
