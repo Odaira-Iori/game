@@ -2,6 +2,12 @@
     margin: 0;
     padding: 0;
 }
+.dotgothic16-regular {
+    font-family: "DotGothic16", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  
 html{
     overflow: auto;
 }
@@ -13,15 +19,18 @@ body{
     height: 100vh;
 }
 .st a{
-    width: 12vw;
+    height: 10vh;
+    width: 20vw;
     background-color: #969dff;
     border: none;
     border-radius: 5em;
-    font-size: 2rem;
+    font-size: 2.5em;
     color: #fff;
     display: block;
-    margin: 3% auto;
+    margin: 8% auto;
+    padding-top: 0.5%;
     text-decoration: none;
+    white-space: nowrap
 }
 
 .st a :hover{
@@ -65,9 +74,12 @@ body{
     position: fixed;
     top: 15px;
     left: 15px;
-    width: 40px;
-    height: 40px;
+    width: 80px;
+    height: 80px;
     cursor: pointer;
+    background-color: #888fea;
+    border-radius: 50em;
+    padding: 20px;
 }
 .black-bg {
     position: fixed;
@@ -88,12 +100,25 @@ body{
     margin: 0 auto;
 }
 .baku{
-    margin: 15% auto 0 auto;
+    text-align: center;
+    margin: 10% auto 0 auto;
     color: #eee;
     background-color: #223876;
     padding: 1%;
     width: 30%;
+    font-size: 1.5em;
 }
 .baku ul{
     list-style-type: none;
+}
+.baku li{
+    margin: 2% 10%;
+}
+.sousa{
+    border-bottom: dashed #fff 2px;
+    margin: 0 10%;
+    font-weight:normal
+}
+.sousa2{
+    font-size: 0.8em;
 }
